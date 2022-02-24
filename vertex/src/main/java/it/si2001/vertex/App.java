@@ -21,7 +21,7 @@ public class App {
 		Router router = Router.router(vertx);
 		
 		router
-		.route()//ogni richiesta verrà intercettata qui perchè non ci sono altre routes
+		.route("/hello")//ogni richiesta verrà intercettata qui perchè non ci sono altre routes
 		.handler(routingContext ->{
 			HttpServerResponse response = routingContext.response();
 			response.putHeader("content-type", "text/plain");
