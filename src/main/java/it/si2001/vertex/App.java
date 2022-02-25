@@ -1,12 +1,16 @@
 package it.si2001.vertex;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 
 /**
@@ -14,16 +18,35 @@ import io.vertx.ext.web.handler.BodyHandler;
  *
  */
 public class App {
-	public static void main(String[] args) {
+	public static void main(String[] args) throws SQLException {
 		Vertx vertx = Vertx.vertx();
 
+		String url = "jdbc:oracle:thin:@0.0.0.0:1522/XE";
+
+		String userName = "demouser";
+		String password = "demouser";
+
+		Connection con = DriverManager.getConnection(url, userName, password);
+
+
+		Statement st = con.createStatement();
+
+		ResultSet rs = st.executeQuery("select * from testtable");
+
+	
+		while (rs.next()) {
+			
+			System.out.println(rs.getString(1));
+		}
+		
+		// st.setInt(0, 3333);
 		// creo il server sul quale gira l'app
 		HttpServer httpServer = vertx.createHttpServer();
 
 		// Router è simile al controller
 		Router router = Router.router(vertx);
-		Route handler1 = router.get("/hello/:name")// ogni richiesta verrà intercettata qui perchè non ci sono altre
-													// routes
+		router.get("/hello/:name")
+									// routes
 				.handler(routingContext -> {
 					String name = routingContext.request().getParam("name");
 					HttpServerResponse response = routingContext.response();
@@ -34,7 +57,7 @@ public class App {
 
 				});
 
-		Route handler2 = router.post("/bye")// ogni richiesta verrà intercettata qui perchè non ci sono altre routes
+		router.post("/bye")
 				.consumes("*/json")// vuole solo dati json
 				.handler(routingContext -> {
 					HttpServerResponse response = routingContext.response();
@@ -45,11 +68,10 @@ public class App {
 
 				});
 
-		Router routerPOST = Router.router(vertx);
 		// add a handler which sets the request body on the RoutingContext.
 		router.route().handler(BodyHandler.create());
 		// expose a POST method endpoint on the URI: /analyze
-		router.post("/analyze").handler(req->{
+		router.post("/analyze").handler(req -> {
 			JsonObject body = req.getBodyAsJson();
 
 			// a JsonObject wraps a map and it exposes type-aware getters
@@ -63,9 +85,4 @@ public class App {
 
 	}
 
-	// handle anything POSTed to /analyze
-	public void analyze(RoutingContext context) {
-		// the POSTed content is available in context.getBodyAsJson()
-		
-	}
 }
